@@ -1,0 +1,19 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <EditTextPreference
+        android:key="@string/pref_city_key"
+        android:title="@string/pref_city_label"
+        android:defaultValue="@string/pref_city_default"
+        android:inputType="text"
+        android:singleLine="true"
+        />
+
+    <CheckBoxPreference
+        android:key="@string/pref_notification_key"
+        android:title="@string/pref_notification_label"
+        android:summaryOn="@string/pref_notification_summary_on"
+        android:summaryOff="@string/pref_notification_summary_off"
+        android:defaultValue="@string/pref_notification_default"
+        />
+
+</PreferenceScreen>
