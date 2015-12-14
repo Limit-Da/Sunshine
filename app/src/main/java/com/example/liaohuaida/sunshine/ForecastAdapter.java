@@ -9,8 +9,6 @@ import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.text.SimpleDateFormat;
-
 
 public class ForecastAdapter extends CursorAdapter {
 
@@ -24,20 +22,7 @@ public class ForecastAdapter extends CursorAdapter {
         super(context, c, flags);
         mContext = context;
     }
-
-    private String convertCursorRowToUXFormat(Cursor cursor) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-
-        long date = cursor.getLong(ForecastFragment.COL_DATE);
-        String weather = cursor.getString(ForecastFragment.COL_SHORT_DESC);
-        int highTemp = cursor.getInt(ForecastFragment.COL_MAX_TEMP);
-        int lowTemp = cursor.getInt(ForecastFragment.COL_MIN_TEMP);
-
-        String formatStr = dateFormat.format(date) + " - "+ weather + " - " + highTemp + "/" +lowTemp;
-
-        return formatStr;
-    }
-
+    
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
         int viewType = getItemViewType(cursor.getPosition());
@@ -90,7 +75,9 @@ public class ForecastAdapter extends CursorAdapter {
         } else {
             iconId = Utility.getWeatherIcon(cursor.getInt(ForecastFragment.COL_WEATHER_ID));
         }
-        imageView.setImageResource(iconId);
+        if (iconId != -1) {
+            imageView.setImageResource(iconId);
+        }
 
         //设置日期
         String dateStr = Utility.getFriendlyDate(cursor.getLong(ForecastFragment.COL_DATE));
