@@ -22,7 +22,7 @@ public class ForecastAdapter extends CursorAdapter {
         super(context, c, flags);
         mContext = context;
     }
-    
+
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
         int viewType = getItemViewType(cursor.getPosition());

@@ -51,6 +51,7 @@
         <provider
             android:authorities="com.example.liaohuaida.sunshine"
             android:name=".data.WeatherProvider"
+            android:exported="false"
             />
 
         <service

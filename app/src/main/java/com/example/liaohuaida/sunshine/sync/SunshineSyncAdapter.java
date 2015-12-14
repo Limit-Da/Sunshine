@@ -76,21 +76,22 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
 
         String city = Utility.getPreferenceLocation(mContext);
 
-        final String CITY_NAME = "cityname";
+        final String CITY = "city";
         final String KEY = "key";
 
-        String key = "a443f4c942af901659d40fbec108ac3a";
-
+        String key = "bd6dbff1129f4d5a904155b5ef5686dd";
 
         HttpURLConnection urlConnection = null;
         StringBuilder stringBuilder = new StringBuilder();
         String forecastJsonStr = null;
         try {
-            Uri queryUri = Uri.parse("http://op.juhe.cn/onebox/weather/query?").buildUpon()
-                    .appendQueryParameter(CITY_NAME, city)
+            Uri queryUri = Uri.parse("https://api.heweather.com/x3/weather?").buildUpon()
+                    .appendQueryParameter(CITY, city)
                     .appendQueryParameter(KEY, key)
                     .build();
             URL url = new URL(queryUri.toString());
+
+            Log.i(LOG_TAG, url.toString());
 
             urlConnection = (HttpURLConnection) url.openConnection();
             InputStream in = urlConnection.getInputStream();
@@ -113,7 +114,8 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
         }
 
         try{
-            getDataFromJsonStr(forecastJsonStr);
+//            getDataFromJsonStr(forecastJsonStr);
+            getDataFromJson2(forecastJsonStr);
         } catch (JSONException e) {
             Log.e(LOG_TAG, "Failed to parse json string");
         }
@@ -121,36 +123,34 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
 
     }
 
-    private void getDataFromJsonStr(String jsonStr)
-            throws JSONException {
+
+
+    private void getDataFromJson2(String jsonStr)
+        throws JSONException {
 
         JSONObject forecastJson = new JSONObject(jsonStr);
-        JSONObject dataObject = forecastJson.getJSONObject("result").getJSONObject("data");
-        JSONArray weatherArray = dataObject.getJSONArray("weather");
-        JSONObject realTimeObject = dataObject.getJSONObject("realtime");
+        JSONObject dataObject = forecastJson.getJSONArray("HeWeather data service 3.0").getJSONObject(0);
+        JSONObject cityObject = dataObject.getJSONObject("basic");
+        JSONArray forecastArray = dataObject.getJSONArray("daily_forecast");
 
-        String cityName = realTimeObject.getString("city_name");
+        String cityName = cityObject.getString("city");
         long locationId = addLocation(cityName);
 
-        //String[] resultStr = new String[7];
+        Vector<ContentValues> cvVector = new Vector<>(forecastArray.length());
 
-        Vector<ContentValues> cvVector = new Vector<>(weatherArray.length());
-
-        for (int i = 0; i < weatherArray.length(); i++) {
+        for (int i = 0; i < forecastArray.length(); i++) {
             String dateStr;
 
-            JSONObject dayForecast = weatherArray.getJSONObject(i);
+            JSONObject dayForecast = forecastArray.getJSONObject(i);
+
             dateStr = dayForecast.getString("date");
+            JSONObject condition = dayForecast.getJSONObject("cond");
+            JSONObject tmp = dayForecast.getJSONObject("tmp");
 
-            JSONArray dayInfo = dayForecast.getJSONObject("info")
-                    .getJSONArray("day");
-            JSONArray nightInfo = dayForecast.getJSONObject("info")
-                    .getJSONArray("night");
-
-            int highTemp = dayInfo.getInt(2);
-            int lowTemp = nightInfo.getInt(2);
-            int weatherId = dayInfo.getInt(0);
-            String shortDesc = dayInfo.getString(1);
+            int highTemp = tmp.getInt("max");
+            int lowTemp = tmp.getInt("min");
+            int weatherId = condition.getInt("code_d");
+            String shortDesc = condition.getString("txt_d");
 
             long date= 0;
             try {
@@ -159,9 +159,9 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
                 Log.e(LOG_TAG, "Failed to parse date");
                 e.printStackTrace();
             }
-            String description = dayInfo.getString(1);
 
-            String forecast = dateStr + " - "+ description + " - " + highTemp + "/" + lowTemp;
+            String forecast = dateStr + " - "+ shortDesc + " - " + highTemp + "/" + lowTemp;
+            Log.i(LOG_TAG, forecast);
 
             ContentValues weatherValue = new ContentValues();
             weatherValue.put(WeatherContract.WeatherEntry.COLUMN_MAX_TEMP, highTemp);
