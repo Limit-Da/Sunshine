@@ -42,7 +42,7 @@ import java.text.ParseException;
 import java.util.Vector;
 
 public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
-    public final String LOG_TAG = SunshineSyncAdapter.class.getSimpleName();
+    public static final String LOG_TAG = SunshineSyncAdapter.class.getSimpleName();
 
     private final Context mContext;
 
@@ -114,18 +114,13 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
         }
 
         try{
-//            getDataFromJsonStr(forecastJsonStr);
-            getDataFromJson2(forecastJsonStr);
+            getDataFromJson(forecastJsonStr);
         } catch (JSONException e) {
             Log.e(LOG_TAG, "Failed to parse json string");
         }
-
-
     }
 
-
-
-    private void getDataFromJson2(String jsonStr)
+    private void getDataFromJson(String jsonStr)
         throws JSONException {
 
         JSONObject forecastJson = new JSONObject(jsonStr);
@@ -185,7 +180,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
             int rows = mContext.getContentResolver()
                     .delete(WeatherContract.WeatherEntry.CONTENT_URI,
                             WeatherContract.WeatherEntry.COLUMN_DATE + " < ? ",
-                            new String[] { Long.toString(Utility.getStartDateTime(System.currentTimeMillis()))});
+                            new String[]{Long.toString(Utility.getStartDateTime(System.currentTimeMillis()))});
 
             Log.i(LOG_TAG, "Delete is completed. " + rows + " rows are deleted");
         }
@@ -222,6 +217,23 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     /**
+     * 在synImmediately中使用，判断是否需要调用synImmediately马上同步。
+     * @return 若数据库中已经存在所选地区一周的天气数据，则返回false，否则返回true
+     * */
+    private static boolean isNeedUpdate(Context context) {
+        String city = Utility.getPreferenceLocation(context);
+
+        Uri weatherUri = WeatherContract.WeatherEntry
+                .buildWeatherLocationWithStartDate(city, Utility.getStartDateTime(System.currentTimeMillis()));
+
+        Cursor result = context.getContentResolver().query(weatherUri,null,null,null,null);
+        int count = result.getCount();
+        result.close();
+
+        return count < 7;
+    }
+
+    /**
      * Helper method to schedule the sync adapter periodic execution
      */
     public static void configurePeriodicSync(Context context, int syncInterval, int flexTime) {
@@ -245,6 +257,10 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
      * @param context The context used to access the account service
      */
     public static void syncImmediately(Context context) {
+        if (!isNeedUpdate(context)) {
+            return ;
+        }
+
         Bundle bundle = new Bundle();
         bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
         bundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
@@ -368,8 +384,9 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
                 //refreshing last sync
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putLong(lastNotificationKey, System.currentTimeMillis());
-                editor.commit();
+                editor.apply();
             }
+            cursor.close();
         }
 
     }

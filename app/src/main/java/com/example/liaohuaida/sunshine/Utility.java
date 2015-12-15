@@ -18,6 +18,11 @@ public class Utility {
                         context.getString(R.string.pref_city_default));
     }
 
+    public static String getActionBarTitle(Context context) {
+
+        return context.getString(R.string.actionbar_title, getPreferenceLocation(context));
+    }
+
     public static String getFormatDate(long date) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("MM月dd日", Locale.CHINA);
 

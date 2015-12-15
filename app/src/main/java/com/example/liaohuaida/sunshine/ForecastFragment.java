@@ -7,6 +7,8 @@ import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -82,12 +84,6 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
         return super.onOptionsItemSelected(item);
     }
 
-//    @Override
-//    public void onStart() {
-//        super.onStart();
-//        updateWeather();
-//    }
-
     @Override
     public void onResume() {
         super.onResume();
@@ -95,12 +91,15 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
     public void onLocationChanged() {
         updateWeather();
+        setActionBarTitle();
         getLoaderManager().restartLoader(FORECAST_LOADER, null, this);
     }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+//        setActionBarLogo();
+        setActionBarTitle();
         getLoaderManager().initLoader(FORECAST_LOADER, null, this);
     }
 
@@ -128,10 +127,10 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Cursor cursor = (Cursor)parent.getItemAtPosition(position);
+                Cursor cursor = (Cursor) parent.getItemAtPosition(position);
                 if (null != cursor) {
                     String cityName = Utility.getPreferenceLocation(getActivity());
-                    ((Callback)getActivity()).onItemClick(WeatherContract.WeatherEntry
+                    ((Callback) getActivity()).onItemClick(WeatherContract.WeatherEntry
                             .buildWeatherLocationWithDate(cityName, cursor.getLong(COL_DATE)));
                 }
                 mPosition = position;
@@ -147,18 +146,16 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
     private void updateWeather() {
         Log.i(LOG_TAG, "on updateWeather");
-//        String city = Utility.getPreferenceLocation(getActivity());
-//
-//        AlarmManager am = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
-//
-//        Intent intent = new Intent(getActivity(), SunshineService.AlarmReceiver.class);
-//        intent.putExtra(SunshineService.AlarmReceiver.ALARM_RECEIVER_STRING, city);
-//        PendingIntent pi = PendingIntent.getBroadcast(getActivity(), 0, intent, PendingIntent.FLAG_ONE_SHOT);
-//
-//        am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 5 * 1000, pi);
         SunshineSyncAdapter.syncImmediately(getActivity());
     }
 
+    private void setActionBarTitle() {
+        ActionBar actionBar = ((AppCompatActivity)getActivity()).getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayShowTitleEnabled(true);
+            actionBar.setTitle(Utility.getActionBarTitle(getActivity()));
+        }
+    }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {

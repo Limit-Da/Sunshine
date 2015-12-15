@@ -28,4 +28,6 @@
     <!-- Strings related to Notification preference -->
     <string name="pref_last_notification">last_notification</string>
 
+    <string name="actionbar_title">\u2003<xliff:g id="city">%1$s</xliff:g>天气</string>
+
 </resources>
